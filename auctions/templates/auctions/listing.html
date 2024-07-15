@@ -1,19 +1,35 @@
 {% extends "auctions/layout.html" %}
+
 {% block body %}
+
+    <div class="container">
+        {% if message %}
+            {% if update %}
+                <div class="alert alert-success" role="alert">
+                    {{ message }}
+                </div>
+            {% else %}
+                <div class="alert alert-danger" role="alert">
+                    {{ message }}
+                </div>
+            {% endif %}
+        {% endif %}
+    </div>
+
+    {% if not listingData.isActive and isWinner %}
+        <h1>
+            You Won the Auction!
+        </h1>
+    {% endif %}
+
     <h2>{{ listingData.title }}</h2>
- 
+
     <p>{{ listingData.description }}</p>
 
     <p>Owner:{{ listingData.owner }}</p>
     <h6>Price: ${{ listingData.price.bid }}</h6>
 
-    <img class="card-img-top" src="{{ listingData.imageUrl }}" alt="{{ listingData.title }}">
-
-    {% if not listingData.isActive and isWinner %}
-        <div class="alert alert-success" role="alert">
-            You Won the Auction!
-        </div>
-    {% endif %}
+    <img class="card-img-top" src="{{ listingData.imageUrl }}" alt="{{ listingData.title }}" style="width: 200px; height: auto;">
 
     {% if user.is_authenticated and listingData.isActive %}
         {% if isOwner %}
@@ -41,4 +57,17 @@
                 <button type="submit" class="btn btn-warning">Add</button>
         </form>
     {% endif %}
+    {% if user.is_authenticated %}
+        <form action="{% url 'addComment' id=listingData.id %}" method="POST">
+            {% csrf_token %}
+            <input type="text" placeholder="Add Comment" name="addComment">
+            <button type="submit" class="btn btn-success">Submit</button>
+        </form>
+    {% endif %}
+    <ul class="list-group">
+        {% for comment in allComments %}
+            <li>{{ comment.message }} </br> <p>Posted By {{ comment.author }}</p></li>
+        {% endfor %}
+    </ul>
+    
 {% endblock %}

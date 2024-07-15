@@ -9,8 +9,10 @@ from .models import User,Listing,Bid,Comment,Category
 
 def index(request):
     activeListings=Listing.objects.filter(isActive=True)
-    return render(request,"auctions/index.html",{
-        "activeListings":activeListings        
+    allCategories=Category.objects.all()
+    return render(request, "auctions/index.html",{
+        "activeListings":activeListings,
+        "categories":allCategories,
     })
 
 def login_view(request):
@@ -32,11 +34,9 @@ def login_view(request):
     else:
         return render(request, "auctions/login.html")
 
-
 def logout_view(request):
     logout(request)
     return HttpResponseRedirect(reverse("index"))
-
 
 def register(request):
     if request.method == "POST":
@@ -63,7 +63,6 @@ def register(request):
         return HttpResponseRedirect(reverse("index"))
     else:
         return render(request, "auctions/register.html")
-
 
 def createListing(request):
     if request.method=="GET":
@@ -146,27 +145,48 @@ def addBid(request,id):
             "isOwner":isOwner,  
         })  
 
-def close(request,id):
-    listingData=Listing.objects.get(pk=id)
-    listingData.isActive=False
+def close(request, id):
+    listingData = Listing.objects.get(pk=id)
+    listingData.isActive = False
     listingData.save()
-    isListingInWatchlist=request.user in listingData.watchlist.all()
-    allComments=Comment.objects.filter(listing=listingData)
-    isOwner=request.user.username==listingData.owner.username
-    return render(request,"auctions/listing.html",{
-        "listing":listingData,
-        "isListingInWatchlist":isListingInWatchlist,
-        "allComments":allComments,
-        "isOwner":isOwner,
-        "update":True,
-        "message":"Your auction has ended",
+
+    isListingInWatchlist = request.user in listingData.watchlist.all()
+    allComments = Comment.objects.filter(listing=listingData)
+    isOwner = request.user.username == listingData.owner.username
+    isWinner = request.user.username == listingData.price.user.username
+
+    return render(request, "auctions/listing.html", {
+        "listingData": listingData,
+        "isListingInWatchlist": isListingInWatchlist,
+        "allComments": allComments,
+        "isOwner": isOwner,
+        "isWinner": isWinner,
+        "update": True,
+        "message": "Your auction has ended",
     })
 
-def listing_detail(request,id):
-    listing=get_object_or_404(Listing,id=id)
-    is_winner=request.user==listing.price.user
-    return render(request,"auctions/listing.html",{
-        "listing":listing,
-        "isWinner":is_winner,
-        "user":request.user,
+def addComment(request,id):
+    listingData=Listing.objects.get(pk=id)
+    comment=request.POST['addComment']
+    writer=request.user
+    a=Comment(author=writer,message=comment,listing=listingData)
+    a.save()
+    return HttpResponseRedirect(reverse("listing",args=(id, )))
+
+def displayWatchlist(request):
+    currentUser=request.user
+    listings=currentUser.listingWatchlist.all()
+    return render(request,"auctions/watchlist.html",{
+        "listings":listings
     })
+
+def displayCategories(request):
+    if request.method=="POST":
+        categoryFromForm=request.POST['category']
+        category=Category.objects.get(categoryName=categoryFromForm)
+        activeListings=Listing.objects.filter(isActive=True,category=category)
+        allCategories=Category.objects.all()
+        return render(request,"auctions/index.html",{
+            "activeListings":activeListings,
+            "categories":allCategories,
+        })

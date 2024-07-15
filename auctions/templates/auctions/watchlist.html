@@ -1,21 +1,7 @@
 {% extends "auctions/layout.html" %}
-
 {% block body %}
-    
-    <form action="{% url 'displayCategories' %}" method="POST">
-        {% csrf_token %}
-        <label for="category">Choose a Category:</label>
-            <select name="category" id="category">
-                {% for a in categories %}
-                    <option value="{{ a.categoryName }}">{{ a.categoryName }}</option>
-                {% endfor %}
-            </select>
-        <button type="submit" class="btn btn-warning">Select</button>
-    </form>
-
-    <h2>Active Listings</h2>
     <div class="row mx-3">
-        {% for listing in activeListings %}
+        {% for listing in listings %}
             <div class="card mx-3" style="width: 18rem;">
                 <img class="card-img-top" src="{{ listing.imageUrl }}" alt="{{ listing.title }}">
                 <div class="card-body">
@@ -26,6 +12,4 @@
             </div>
         {% endfor%}
     </div>
-
-    
 {% endblock %}
